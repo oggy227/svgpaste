@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVG to PDF Converter</title>
+    <title>SVG Code to PDF Downloader</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * {
@@ -11,14 +11,12 @@
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -27,36 +25,30 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             overflow: hidden;
         }
-
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 30px;
             text-align: center;
         }
-
         .header h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
         }
-
         .header p {
             font-size: 1.1em;
             opacity: 0.9;
         }
-
         .content {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
             padding: 30px;
         }
-
         .panel {
             display: flex;
             flex-direction: column;
         }
-
         .panel-title {
             font-size: 1.3em;
             font-weight: bold;
@@ -66,7 +58,6 @@
             align-items: center;
             gap: 10px;
         }
-
         .panel-title::before {
             content: '';
             width: 4px;
@@ -74,7 +65,6 @@
             background: #667eea;
             border-radius: 2px;
         }
-
         textarea {
             flex: 1;
             min-height: 400px;
@@ -86,40 +76,87 @@
             resize: vertical;
             transition: border-color 0.3s;
         }
-
         textarea:focus {
             outline: none;
             border-color: #667eea;
         }
-
         .preview-container {
             flex: 1;
             min-height: 400px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
-            padding: 20px;
+            padding: 0;
             background: #f8f9fa;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .preview-wrapper {
+            flex: 1;
             overflow: auto;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
-
         .preview-container svg {
-            max-width: 100%;
-            height: auto;
             background: white;
             border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            cursor: move;
+            transition: transform 0.1s ease;
         }
-
+        .zoom-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            background: white;
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .zoom-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+        .zoom-btn:active {
+            transform: scale(0.95);
+        }
+        .zoom-level {
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #667eea;
+            min-width: 60px;
+            justify-content: center;
+        }
         .button-group {
             display: flex;
             gap: 15px;
             margin-top: 20px;
             justify-content: center;
         }
-
         button {
             padding: 15px 30px;
             font-size: 16px;
@@ -132,33 +169,27 @@
             align-items: center;
             gap: 10px;
         }
-
         .btn-preview {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
-
         .btn-preview:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
-
         .btn-download {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
         }
-
         .btn-download:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
         }
-
         .btn-download:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
         }
-
         .error-message {
             background: #fee;
             color: #c33;
@@ -168,7 +199,6 @@
             display: none;
             border-left: 4px solid #c33;
         }
-
         .success-message {
             background: #efe;
             color: #3c3;
@@ -178,7 +208,6 @@
             display: none;
             border-left: 4px solid #3c3;
         }
-
         @media (max-width: 768px) {
             .content {
                 grid-template-columns: 1fr;
@@ -189,24 +218,29 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎨 SVG to PDF Converter</h1>
+            <h1>📊 SVG Code to PDF Downloader</h1>
             <p>Paste your SVG code, preview it, and download as PDF</p>
         </div>
-
         <div class="content">
             <div class="panel">
-                <div class="panel-title">📝 SVG Input</div>
+                <div class="panel-title">📝 SVG Code Input</div>
                 <textarea id="svgInput" placeholder="Paste your SVG code here..."></textarea>
             </div>
-
             <div class="panel">
                 <div class="panel-title">👁️ Preview</div>
                 <div class="preview-container" id="previewContainer">
-                    <p style="color: #999;">Your SVG preview will appear here</p>
+                    <div class="zoom-controls" id="zoomControls" style="display: none;">
+                        <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">−</button>
+                        <div class="zoom-level" id="zoomLevel">100%</div>
+                        <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">+</button>
+                        <button class="zoom-btn" onclick="resetZoom()" title="Reset Zoom">⟲</button>
+                    </div>
+                    <div class="preview-wrapper" id="previewWrapper">
+                        <p style="color: #999;">Your SVG preview will appear here</p>
+                    </div>
                 </div>
             </div>
         </div>
-
         <div class="button-group">
             <button class="btn-preview" onclick="previewSVG()">
                 <span>🔄</span> Preview SVG
@@ -215,16 +249,16 @@
                 <span>📥</span> Download PDF
             </button>
         </div>
-
         <div style="padding: 0 30px 30px;">
             <div class="error-message" id="errorMessage"></div>
             <div class="success-message" id="successMessage"></div>
         </div>
     </div>
-
     <script>
         let currentSVG = null;
-
+        let zoomLevel = 1;
+        let isPanning = false;
+        let startX, startY, scrollLeft, scrollTop;
         function showError(message) {
             const errorEl = document.getElementById('errorMessage');
             errorEl.textContent = message;
@@ -233,7 +267,6 @@
                 errorEl.style.display = 'none';
             }, 5000);
         }
-
         function showSuccess(message) {
             const successEl = document.getElementById('successMessage');
             successEl.textContent = message;
@@ -242,17 +275,81 @@
                 successEl.style.display = 'none';
             }, 3000);
         }
-
+        function updateZoomDisplay() {
+            document.getElementById('zoomLevel').textContent = Math.round(zoomLevel * 100) + '%';
+            if (currentSVG) {
+                currentSVG.style.transform = `scale(${zoomLevel})`;
+            }
+        }
+        function zoomIn() {
+            if (zoomLevel < 3) {
+                zoomLevel += 0.1;
+                updateZoomDisplay();
+            }
+        }
+        function zoomOut() {
+            if (zoomLevel > 0.3) {
+                zoomLevel -= 0.1;
+                updateZoomDisplay();
+            }
+        }
+        function resetZoom() {
+            zoomLevel = 1;
+            updateZoomDisplay();
+            const wrapper = document.getElementById('previewWrapper');
+            wrapper.scrollLeft = 0;
+            wrapper.scrollTop = 0;
+        }
+        function setupPanning() {
+            const wrapper = document.getElementById('previewWrapper');
+           
+            wrapper.addEventListener('mousedown', (e) => {
+                isPanning = true;
+                startX = e.pageX - wrapper.offsetLeft;
+                startY = e.pageY - wrapper.offsetTop;
+                scrollLeft = wrapper.scrollLeft;
+                scrollTop = wrapper.scrollTop;
+                wrapper.style.cursor = 'grabbing';
+            });
+            wrapper.addEventListener('mouseleave', () => {
+                isPanning = false;
+                wrapper.style.cursor = currentSVG ? 'grab' : 'default';
+            });
+            wrapper.addEventListener('mouseup', () => {
+                isPanning = false;
+                wrapper.style.cursor = currentSVG ? 'grab' : 'default';
+            });
+            wrapper.addEventListener('mousemove', (e) => {
+                if (!isPanning) return;
+                e.preventDefault();
+                const x = e.pageX - wrapper.offsetLeft;
+                const y = e.pageY - wrapper.offsetTop;
+                const walkX = (x - startX) * 1.5;
+                const walkY = (y - startY) * 1.5;
+                wrapper.scrollLeft = scrollLeft - walkX;
+                wrapper.scrollTop = scrollTop - walkY;
+            });
+            // Zoom with mouse wheel
+            wrapper.addEventListener('wheel', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    if (e.deltaY < 0) {
+                        zoomIn();
+                    } else {
+                        zoomOut();
+                    }
+                }
+            }, { passive: false });
+        }
         function previewSVG() {
             const svgInput = document.getElementById('svgInput').value.trim();
-            const previewContainer = document.getElementById('previewContainer');
+            const previewWrapper = document.getElementById('previewWrapper');
+            const zoomControls = document.getElementById('zoomControls');
             const downloadBtn = document.getElementById('downloadBtn');
-
             if (!svgInput) {
                 showError('Please paste SVG code first!');
                 return;
             }
-
             try {
                 // Clean the SVG input
                 let cleanSVG = svgInput;
@@ -264,108 +361,106 @@
                         throw new Error('Invalid SVG format');
                     }
                 }
-
                 // Display the SVG
-                previewContainer.innerHTML = cleanSVG;
-                currentSVG = previewContainer.querySelector('svg');
-
+                previewWrapper.innerHTML = cleanSVG;
+                currentSVG = previewWrapper.querySelector('svg');
                 if (!currentSVG) {
                     throw new Error('Could not parse SVG');
                 }
-
+                // Reset zoom
+                zoomLevel = 1;
+                updateZoomDisplay();
+               
+                // Show zoom controls
+                zoomControls.style.display = 'flex';
+               
+                // Enable download button
                 downloadBtn.disabled = false;
-                showSuccess('SVG loaded successfully! You can now download as PDF.');
+
+                // Set cursor for panning
+                previewWrapper.style.cursor = 'grab';
+               
+                showSuccess('SVG loaded successfully! Use mouse wheel + Ctrl to zoom, click and drag to pan.');
             } catch (error) {
                 showError('Error parsing SVG: ' + error.message);
-                previewContainer.innerHTML = '<p style="color: #999;">Invalid SVG code</p>';
+                previewWrapper.innerHTML = '<p style="color: #999;">Invalid SVG code</p>';
+                zoomControls.style.display = 'none';
                 downloadBtn.disabled = true;
                 currentSVG = null;
+                previewWrapper.style.cursor = 'default';
             }
         }
-
         async function downloadPDF() {
             if (!currentSVG) {
                 showError('Please preview the SVG first!');
                 return;
             }
-
             try {
                 const { jsPDF } = window.jspdf;
-
                 // Get SVG dimensions
                 const svgWidth = parseFloat(currentSVG.getAttribute('width') || 850);
                 const svgHeight = parseFloat(currentSVG.getAttribute('height') || 1750);
-
                 // Clone and prepare SVG
                 const svgClone = currentSVG.cloneNode(true);
                 svgClone.setAttribute('width', svgWidth);
                 svgClone.setAttribute('height', svgHeight);
-
+                svgClone.style.transform = 'none';
                 // Convert SVG to data URL with proper encoding
                 const svgData = new XMLSerializer().serializeToString(svgClone);
                 const svgDataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
-
                 // Create canvas for conversion
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                
+               
                 // Set canvas size (scale up for better quality)
                 const scale = 2;
                 canvas.width = svgWidth * scale;
                 canvas.height = svgHeight * scale;
-
                 // Create image from SVG
                 const img = new Image();
-                
+               
                 img.onload = function() {
                     // Draw white background
                     ctx.fillStyle = 'white';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    
+                   
                     // Draw image on canvas
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
                     // Convert canvas to data URL
                     const imgData = canvas.toDataURL('image/png');
-
                     // Calculate PDF dimensions (convert px to mm, assuming 96 DPI)
                     const pdfWidth = svgWidth * 0.264583; // px to mm
                     const pdfHeight = svgHeight * 0.264583;
-
                     // Create PDF with custom dimensions
                     const pdf = new jsPDF({
                         orientation: pdfWidth > pdfHeight ? 'landscape' : 'portrait',
                         unit: 'mm',
                         format: [pdfWidth, pdfHeight]
                     });
-
                     // Add image to PDF
                     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-
                     // Download the PDF
                     pdf.save('svg-diagram.pdf');
                     showSuccess('PDF downloaded successfully!');
                 };
-
                 img.onerror = function(e) {
                     console.error('Image load error:', e);
                     showError('Error converting SVG to image. The SVG may contain unsupported elements.');
                 };
-
                 img.src = svgDataUrl;
-
             } catch (error) {
                 console.error('PDF generation error:', error);
                 showError('Error generating PDF: ' + error.message);
             }
         }
-
         // Allow Enter key to preview
         document.getElementById('svgInput').addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'Enter') {
                 previewSVG();
             }
         });
+        // Initialize panning on load
+        setupPanning();
     </script>
 </body>
 </html>
