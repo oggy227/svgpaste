@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SVG to PDF Downloader</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://unpkg.com/svg2pdf.js/dist/svg2pdf.min.js"></script>
+  <style>
+    body { font-family: Arial; margin: 2em; background: #f7f7f7;}
+    textarea { width: 100%; height: 300px; font-family: 'Courier New', monospace; font-size: 12px;}
+    button { margin-top: 12px; padding: 8px 16px; }
+  </style>
+</head>
+<body>
+  <h1>SVG Code to PDF Downloader</h1>
+  <textarea id="svgArea" placeholder="Paste SVG code here..."></textarea>
+  <br>
+  <button onclick="downloadPDF()">Download PDF</button>
+  <script>
+    async function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const svgText = document.getElementById('svgArea').value;
+      if (!svgText.trim()) {
+        alert('Please paste SVG code.');
+        return;
+      }
+      // Create SVG element and render from code
+      const svgElem = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svgElem.innerHTML = svgText;
+      // Parse dimensions (fallback to A4)
+      let width = svgElem.getAttribute('width') || 800;
+      let height = svgElem.getAttribute('height') || 600;
+      const pdf = new jsPDF({ orientation: width > height ? 'landscape' : 'portrait', unit: 'pt', format: [width, height] });
+      // Render SVG onto PDF
+      window.svg2pdf(svgElem, pdf, {x:0, y:0, width:width, height:height});
+      pdf.save('svg.pdf');
+    }
+  </script>
+</body>
+</html>
