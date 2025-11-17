@@ -3,45 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <title>SVG to PDF Downloader</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://unpkg.com/svg2pdf.js/dist/svg2pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/3.0.3/jspdf.umd.min.js"></script>
+  <script src="https://unpkg.com/svg2pdf.js@2.6.0/dist/svg2pdf.umd.min.js"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 2em; background: #f7f7f7; }
     textarea { width: 100%; height: 300px; font-family: 'Courier New', monospace; font-size: 12px; }
     button { margin-top: 12px; padding: 8px 16px; }
+    p.notes { font-size: 14px; line-height: 1.5; }
   </style>
 </head>
 <body>
   <h1>SVG Code to PDF Downloader</h1>
+  <p class="notes"><strong>User Notes for SVG Code Format:</strong><br>
+  - Paste the complete SVG code, starting with the &lt;svg&gt; tag (e.g., &lt;svg xmlns="http://www.w3.org/2000/svg" width="..." height="..."&gt;...&lt;/svg&gt;).<br>
+  - Include 'width' and 'height' attributes in the &lt;svg&gt; tag for accurate PDF page sizing. If omitted, it defaults to A4 portrait (595pt x 842pt).<br>
+  - Ensure the code is valid XML/SVG—no syntax errors, unbalanced tags, or invalid attributes.<br>
+  - Avoid external references (e.g., &lt;image xlink:href="http://..." /&gt;), as they may not load or render in the PDF.<br>
+  - For SVGs with custom fonts or non-ASCII characters, they may require additional setup in jsPDF (not automated here; consider embedding fonts manually if needed).<br>
+  - Test simple SVGs first to verify functionality.</p>
   <textarea id="svgArea" placeholder="Paste SVG code here..."></textarea><br />
   <button id="downloadBtn">Download PDF</button>
   <script>
     const { jsPDF } = window.jspdf;
-    
+   
     async function downloadPDF() {
       const svgText = document.getElementById('svgArea').value.trim();
       if (!svgText) {
         alert('Please paste SVG code.');
         return;
       }
-
       // Parse SVG text into an element
       const parser = new DOMParser();
       const doc = parser.parseFromString(svgText, 'image/svg+xml');
       const svgElem = doc.documentElement;
-
       if (!svgElem || svgElem.nodeName !== 'svg') {
         alert('Invalid SVG code. Ensure it starts with <svg> element.');
         return;
       }
-
-      // Attempt to extract width/height or fallback to default size
-      let width = parseFloat(svgElem.getAttribute('width')) || 595.28; // A4 width in pt
-      let height = parseFloat(svgElem.getAttribute('height')) || 841.89; // A4 height in pt
-
+      // Attempt to extract width/height or fallback to default size (A4 in pt)
+      let width = parseFloat(svgElem.getAttribute('width')) || 595.28; // A4 width
+      let height = parseFloat(svgElem.getAttribute('height')) || 841.89; // A4 height
       // Create jsPDF instance with page size
       const pdf = new jsPDF({ unit: 'pt', format: [width, height] });
-
       try {
         // Use svg2pdf to render SVG element into PDF
         await window.svg2pdf(svgElem, pdf, { x: 0, y: 0, width, height });
@@ -49,10 +52,8 @@
         alert('Error during SVG to PDF conversion: ' + e.message);
         return;
       }
-
-      pdf.save('svg.pdf');
+      pdf.save('svg_output.pdf');
     }
-
     document.getElementById('downloadBtn').addEventListener('click', downloadPDF);
   </script>
 </body>
