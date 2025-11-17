@@ -107,17 +107,20 @@
             cursor: move;
             transition: transform 0.1s ease;
         }
+        .controls-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 10px;
+        }
         .zoom-controls {
-            position: absolute;
-            top: 10px;
-            right: 10px;
             display: flex;
             gap: 8px;
             background: white;
             padding: 8px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            z-index: 10;
         }
         .zoom-btn {
             width: 36px;
@@ -150,6 +153,14 @@
             color: #667eea;
             min-width: 60px;
             justify-content: center;
+        }
+        .instructions {
+            font-size: 14px;
+            color: #666;
+            padding: 8px 12px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            max-width: 300px;
         }
         .button-group {
             display: flex;
@@ -212,6 +223,11 @@
             .content {
                 grid-template-columns: 1fr;
             }
+            .controls-container {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
@@ -228,13 +244,18 @@
             </div>
             <div class="panel">
                 <div class="panel-title">👁️ Preview</div>
-                <div class="preview-container" id="previewContainer">
+                <div class="controls-container">
                     <div class="zoom-controls" id="zoomControls" style="display: none;">
                         <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">−</button>
                         <div class="zoom-level" id="zoomLevel">100%</div>
                         <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">+</button>
                         <button class="zoom-btn" onclick="resetZoom()" title="Reset Zoom">⟲</button>
                     </div>
+                    <div class="instructions" id="instructions" style="display: none;">
+                        Use mouse wheel + Ctrl to zoom, click and drag to pan
+                    </div>
+                </div>
+                <div class="preview-container" id="previewContainer">
                     <div class="preview-wrapper" id="previewWrapper">
                         <p style="color: #999;">Your SVG preview will appear here</p>
                     </div>
@@ -259,6 +280,7 @@
         let zoomLevel = 1;
         let isPanning = false;
         let startX, startY, scrollLeft, scrollTop;
+        
         function showError(message) {
             const errorEl = document.getElementById('errorMessage');
             errorEl.textContent = message;
@@ -267,6 +289,7 @@
                 errorEl.style.display = 'none';
             }, 5000);
         }
+        
         function showSuccess(message) {
             const successEl = document.getElementById('successMessage');
             successEl.textContent = message;
@@ -275,24 +298,28 @@
                 successEl.style.display = 'none';
             }, 3000);
         }
+        
         function updateZoomDisplay() {
             document.getElementById('zoomLevel').textContent = Math.round(zoomLevel * 100) + '%';
             if (currentSVG) {
                 currentSVG.style.transform = `scale(${zoomLevel})`;
             }
         }
+        
         function zoomIn() {
             if (zoomLevel < 3) {
                 zoomLevel += 0.1;
                 updateZoomDisplay();
             }
         }
+        
         function zoomOut() {
             if (zoomLevel > 0.3) {
                 zoomLevel -= 0.1;
                 updateZoomDisplay();
             }
         }
+        
         function resetZoom() {
             zoomLevel = 1;
             updateZoomDisplay();
@@ -300,6 +327,7 @@
             wrapper.scrollLeft = 0;
             wrapper.scrollTop = 0;
         }
+        
         function setupPanning() {
             const wrapper = document.getElementById('previewWrapper');
            
@@ -311,14 +339,17 @@
                 scrollTop = wrapper.scrollTop;
                 wrapper.style.cursor = 'grabbing';
             });
+            
             wrapper.addEventListener('mouseleave', () => {
                 isPanning = false;
                 wrapper.style.cursor = currentSVG ? 'grab' : 'default';
             });
+            
             wrapper.addEventListener('mouseup', () => {
                 isPanning = false;
                 wrapper.style.cursor = currentSVG ? 'grab' : 'default';
             });
+            
             wrapper.addEventListener('mousemove', (e) => {
                 if (!isPanning) return;
                 e.preventDefault();
@@ -329,6 +360,7 @@
                 wrapper.scrollLeft = scrollLeft - walkX;
                 wrapper.scrollTop = scrollTop - walkY;
             });
+            
             // Zoom with mouse wheel
             wrapper.addEventListener('wheel', (e) => {
                 if (e.ctrlKey || e.metaKey) {
@@ -341,15 +373,19 @@
                 }
             }, { passive: false });
         }
+        
         function previewSVG() {
             const svgInput = document.getElementById('svgInput').value.trim();
             const previewWrapper = document.getElementById('previewWrapper');
             const zoomControls = document.getElementById('zoomControls');
+            const instructions = document.getElementById('instructions');
             const downloadBtn = document.getElementById('downloadBtn');
+            
             if (!svgInput) {
                 showError('Please paste SVG code first!');
                 return;
             }
+            
             try {
                 // Clean the SVG input
                 let cleanSVG = svgInput;
@@ -361,18 +397,22 @@
                         throw new Error('Invalid SVG format');
                     }
                 }
+                
                 // Display the SVG
                 previewWrapper.innerHTML = cleanSVG;
                 currentSVG = previewWrapper.querySelector('svg');
+                
                 if (!currentSVG) {
                     throw new Error('Could not parse SVG');
                 }
+                
                 // Reset zoom
                 zoomLevel = 1;
                 updateZoomDisplay();
                
-                // Show zoom controls
+                // Show zoom controls and instructions
                 zoomControls.style.display = 'flex';
+                instructions.style.display = 'block';
                
                 // Enable download button
                 downloadBtn.disabled = false;
@@ -385,29 +425,36 @@
                 showError('Error parsing SVG: ' + error.message);
                 previewWrapper.innerHTML = '<p style="color: #999;">Invalid SVG code</p>';
                 zoomControls.style.display = 'none';
+                instructions.style.display = 'none';
                 downloadBtn.disabled = true;
                 currentSVG = null;
                 previewWrapper.style.cursor = 'default';
             }
         }
+        
         async function downloadPDF() {
             if (!currentSVG) {
                 showError('Please preview the SVG first!');
                 return;
             }
+            
             try {
                 const { jsPDF } = window.jspdf;
+                
                 // Get SVG dimensions
                 const svgWidth = parseFloat(currentSVG.getAttribute('width') || 850);
                 const svgHeight = parseFloat(currentSVG.getAttribute('height') || 1750);
+                
                 // Clone and prepare SVG
                 const svgClone = currentSVG.cloneNode(true);
                 svgClone.setAttribute('width', svgWidth);
                 svgClone.setAttribute('height', svgHeight);
                 svgClone.style.transform = 'none';
+                
                 // Convert SVG to data URL with proper encoding
                 const svgData = new XMLSerializer().serializeToString(svgClone);
                 const svgDataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+                
                 // Create canvas for conversion
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
@@ -416,6 +463,7 @@
                 const scale = 2;
                 canvas.width = svgWidth * scale;
                 canvas.height = svgHeight * scale;
+                
                 // Create image from SVG
                 const img = new Image();
                
@@ -426,39 +474,48 @@
                    
                     // Draw image on canvas
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
                     // Convert canvas to data URL
                     const imgData = canvas.toDataURL('image/png');
+                    
                     // Calculate PDF dimensions (convert px to mm, assuming 96 DPI)
                     const pdfWidth = svgWidth * 0.264583; // px to mm
                     const pdfHeight = svgHeight * 0.264583;
+                    
                     // Create PDF with custom dimensions
                     const pdf = new jsPDF({
                         orientation: pdfWidth > pdfHeight ? 'landscape' : 'portrait',
                         unit: 'mm',
                         format: [pdfWidth, pdfHeight]
                     });
+                    
                     // Add image to PDF
                     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    
                     // Download the PDF
                     pdf.save('svg-diagram.pdf');
                     showSuccess('PDF downloaded successfully!');
                 };
+                
                 img.onerror = function(e) {
                     console.error('Image load error:', e);
                     showError('Error converting SVG to image. The SVG may contain unsupported elements.');
                 };
+                
                 img.src = svgDataUrl;
             } catch (error) {
                 console.error('PDF generation error:', error);
                 showError('Error generating PDF: ' + error.message);
             }
         }
+        
         // Allow Enter key to preview
         document.getElementById('svgInput').addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'Enter') {
                 previewSVG();
             }
         });
+        
         // Initialize panning on load
         setupPanning();
     </script>
