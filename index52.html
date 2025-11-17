@@ -293,10 +293,6 @@
                         <div class="control-label">Pan Controls:</div>
                         <div class="control-hint">Click and drag to pan around the SVG</div>
                     </div>
-                    <div class="control-row">
-                        <div class="control-label">Mouse Wheel:</div>
-                        <div class="control-hint">Hold Ctrl and scroll to zoom in/out</div>
-                    </div>
                 </div>
                 
                 <div class="preview-container" id="previewContainer">
@@ -404,18 +400,6 @@
                 wrapper.scrollLeft = scrollLeft - walkX;
                 wrapper.scrollTop = scrollTop - walkY;
             });
-            
-            // Zoom with mouse wheel
-            wrapper.addEventListener('wheel', (e) => {
-                if (e.ctrlKey || e.metaKey) {
-                    e.preventDefault();
-                    if (e.deltaY < 0) {
-                        zoomIn();
-                    } else {
-                        zoomOut();
-                    }
-                }
-            }, { passive: false });
         }
         
         function previewSVG() {
